@@ -95,6 +95,11 @@ in
         description = "The Hydra package.";
       };
 
+      evaluatorExecutable = mkOption {
+        type = types.path;
+        description = "Path to the hydra-evaluator executable.";
+      };
+
       hydraURL = mkOption {
         type = types.str;
         description = ''
@@ -309,6 +314,9 @@ in
       ];
       path = with pkgs; [
         hostname-debian
+        # Because hydra-evaluator calls `hydra-eval-jobset`. If we
+        # move that perl script into rust, then we can get rid of
+        # this.
         cfg.package
       ];
       environment = env // {
@@ -316,11 +324,11 @@ in
       };
       serviceConfig = {
         ExecStart = escapeShellArgs [
-          "@${cfg.package}/bin/hydra-evaluator"
+          "@${cfg.evaluatorExecutable}"
           "hydra-evaluator"
         ];
         ExecStopPost = escapeShellArgs [
-          "${cfg.package}/bin/hydra-evaluator"
+          "${cfg.evaluatorExecutable}"
           "--unlock"
         ];
         User = "hydra";
